@@ -120,12 +120,11 @@ class BunSqliteCache<T> implements SearchCache<T> {
 
 class VercelKvCache<T> implements SearchCache<T> {
   async get(key: string) {
-    const payload = await kv.get<string>(key)
-    if (!payload) {
+    const parsed = await kv.get<CacheEnvelope<T>>(key)
+    if (!parsed) {
       return null
     }
 
-    const parsed = JSON.parse(payload) as CacheEnvelope<T>
     if (parsed.expiresAt <= Date.now()) {
       await kv.del(key)
       return null
@@ -135,12 +134,7 @@ class VercelKvCache<T> implements SearchCache<T> {
   }
 
   async set(key: string, value: T, ttlSeconds: number) {
-    const payload = JSON.stringify({
-      value,
-      expiresAt: Date.now() + ttlSeconds * 1000,
-    } satisfies CacheEnvelope<T>)
-
-    await kv.set(key, payload, { ex: ttlSeconds })
+    await kv.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 } satisfies CacheEnvelope<T>, { ex: ttlSeconds })
   }
 }
 
