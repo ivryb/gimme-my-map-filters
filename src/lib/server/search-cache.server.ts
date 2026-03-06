@@ -1,6 +1,11 @@
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { kv } from '@vercel/kv'
+import { Redis } from '@upstash/redis'
+
+const kv = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
 
 export interface SearchCache<T> {
   get(key: string): Promise<T | null>
